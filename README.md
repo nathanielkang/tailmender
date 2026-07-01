@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ## Quick start (smoke test)
 
-From the repository root (`2_Code/`), run a small sanity check on one benchmark:
+From the repository root, run a small sanity check on one benchmark:
 
 ```powershell
 python scripts\run_radical_smoke.py --profile smoke --datasets abalone --seeds 42 --n-estimators 12 --max-train 300 --max-test 120 --output-dir results\smoke
@@ -31,12 +31,12 @@ The script writes metrics to the output directory (CSV and JSON summaries). Thos
 
 ## Main experiment script
 
-`scripts/run_radical_smoke.py` evaluates TailMender against published imbalanced-regression baselines on the UAI9 benchmark suite.
+`scripts/run_radical_smoke.py` evaluates TailMender against published imbalanced-regression baselines on nine real-world tabular regression benchmarks.
 
 **All nine datasets (default):**
 
 ```bash
-python scripts/run_radical_smoke.py --profile full --seeds 42,43,44 --n-estimators 80 --output-dir results/uai9_full
+python scripts/run_radical_smoke.py --profile full --seeds 42,43,44 --n-estimators 80 --output-dir results/full
 ```
 
 **Subset of datasets:**
@@ -49,9 +49,9 @@ python scripts/run_radical_smoke.py --profile full --datasets abalone,california
 
 Evaluation protocol: chronological 70/30 train/test split, features and targets standardized, rare region defined as the bottom 10% and top 10% of training targets (fixed thresholds), gradient-boosted tree regressors (XGBoost when available).
 
-## UAI9 datasets
+## Benchmark datasets
 
-The nine benchmarks follow the UAI TabOversample regression roster. Data are fetched at runtime from public sources (OpenML, scikit-learn bundled datasets, and other open repositories) via `scripts/run_router_pilot.py`; no proprietary files are bundled in this repository.
+The default evaluation uses nine heterogeneous tabular regression datasets drawn from OpenML, scikit-learn, and other public repositories. Data are fetched at runtime via `scripts/run_router_pilot.py`; no proprietary files are bundled in this repository.
 
 | Dataset | Rows (approx.) | Features (approx.) |
 |---------|----------------:|-------------------:|
@@ -70,7 +70,7 @@ An internet connection is required on first download for datasets that are not c
 ## Reproducing results
 
 1. Install dependencies with `pip install -r requirements.txt`.
-2. Run `scripts/run_radical_smoke.py` with `--profile full`, three seeds (`--seeds 42,43,44`), and default dataset list. Full runs are CPU-intensive; allow several hours on a multi-core machine.
+2. Run `scripts/run_radical_smoke.py` with `--profile full`, three seeds (`--seeds 42,43,44`), and the default dataset list. Full runs are CPU-intensive; allow several hours on a multi-core machine.
 3. Inspect `radical_full_results.csv` and `radical_full_summary.json` in your chosen `--output-dir`. Rank summaries aggregate per-dataset rare-region and overall metrics across methods.
 
 Hyperparameters (ensemble grid, calibration objective, small-sample fallback) are defined in `scripts/run_radical_smoke.py`.
@@ -79,7 +79,7 @@ Hyperparameters (ensemble grid, calibration objective, small-sample fallback) ar
 
 ```
 scripts/
-  run_radical_smoke.py   # TailMender + baselines on UAI9
+  run_radical_smoke.py   # TailMender + baselines on the nine-dataset suite
   run_router_pilot.py    # dataset loaders and shared utilities
 src/
   evaluation/metrics.py  # rare-region metrics

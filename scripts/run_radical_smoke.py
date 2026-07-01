@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Evaluate TailMender against common imbalanced-regression baselines on UAI9."""
+"""Evaluate TailMender against common imbalanced-regression baselines on tabular benchmarks."""
 
 from __future__ import annotations
 
@@ -663,12 +663,12 @@ def summarize_rank(rows: list[dict], output_dir: Path, profile: str = "smoke") -
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run TailMender experiments on UAI9.")
-    parser.add_argument("--output-dir", default="results/tailmender_uai9")
+    parser = argparse.ArgumentParser(description="Run TailMender experiments on tabular regression benchmarks.")
+    parser.add_argument("--output-dir", default="results/tailmender")
     parser.add_argument("--profile", choices=["smoke", "full"], default="smoke")
     parser.add_argument("--seed", type=int, default=42, help="Single seed kept for backward compatibility.")
     parser.add_argument("--seeds", default=None, help="Comma-separated seeds, e.g. 42,43,44.")
-    parser.add_argument("--datasets", default=None, help="Comma-separated UAI9 dataset names; default runs all.")
+    parser.add_argument("--datasets", default=None, help="Comma-separated dataset names; default runs all nine benchmarks.")
     parser.add_argument("--n-estimators", type=int, default=80)
     parser.add_argument("--max-train", type=int, default=None)
     parser.add_argument("--max-test", type=int, default=None)
@@ -705,7 +705,7 @@ def main() -> None:
     manifest: list[dict] = []
 
     print("=" * 72)
-    print(f"TailMender TabStream-IR {args.profile} test on UAI9")
+    print(f"TailMender {args.profile} test on nine tabular benchmarks")
     print("=" * 72)
     print(f"Methods: {', '.join(methods)}")
     print(f"Seeds: {seeds}")
