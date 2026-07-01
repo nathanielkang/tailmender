@@ -85,7 +85,3 @@ src/
   evaluation/metrics.py  # rare-region metrics
 requirements.txt
 ```
-
-## Contact
-
-Nathaniel Kang — School of Computer Science and Engineering, Kyungpook National University — natekang@knu.ac.kr
