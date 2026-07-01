@@ -1,0 +1,45 @@
+# Experiment outputs and logs
+results/
+results/**
+logs/
+logs/**
+*.log
+
+# Generated metrics and artifacts (anywhere in tree)
+*.csv
+*.json
+
+# Python bytecode and caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Notebooks
+.ipynb_checkpoints/
+**/.ipynb_checkpoints/
+
+# Figure and document outputs
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.svg
+*.eps
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
