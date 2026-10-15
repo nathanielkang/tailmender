@@ -1,87 +1,88 @@
 # TailMender
 
-Reference implementation of **TailMender**, a batch tabular imbalanced-regression method that trains a bulk teacher on uniformly weighted data and a residual-zero tail-student ensemble that corrects rare targets while anchoring predictions in the dense region. Final predictions combine the teacher mean with an aggregated student residual selected by held-out calibration over rare-tail and bulk accuracy.
+**When the rare band is the one that matters, a single model pulled toward the bulk starts leaving the wrong residuals behind.**
 
-## Requirements
+TailMender is a batch tabular method for imbalanced regression. A gradient-boosted bulk teacher fits the dense region under uniform weights. Residual-zero tail students learn the teacher's errors on rare and near-tail rows while anchoring to a zero residual on bulk-safe rows. Held-out calibration selects among pressured students; the teacher and the chosen students are then refit on the full training set. The deployed predictor adds the selected residual to the teacher mean.
 
-- Python 3.10+
-- See `requirements.txt` for Python packages (NumPy, pandas, scikit-learn, XGBoost, PyYAML, and supporting libraries).
+<p align="center">
+  <a href="#quick-start"><strong>Quick start</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#reproduce-the-tables"><strong>Reproduce</strong></a>
+  &nbsp;·&nbsp;
+  <a href="#layout"><strong>Layout</strong></a>
+</p>
 
-Install dependencies:
+## When the bulk wins the fit
+
+Global oversampling, reweighting, and deep regularizers reshape one shared loss. Tail pressure then moves through the same representation that should stay accurate in the dense region. TailMender separates the two jobs.
+
+<p align="center">
+  <img src="docs/figures/fig_motivation.png" alt="Motivation: rare tails need correction while bulk-safe rows stay anchored near the teacher" width="92%">
+</p>
+
+## Teacher fixed, then full-set refit
+
+On the base split the teacher is held fixed while candidate students fit residual targets. Calibration scores already-fitted candidates on a held-out split with no further training. After selection, the teacher is refit on the full training set, then the selected students are refit against its new residuals.
+
+<p align="center">
+  <img src="docs/figures/fig_framework.png" alt="TailMender pipeline: base-split model selection, held-out calibration, then full-training refit and additive prediction" width="96%">
+</p>
+
+## Rare gain, bulk in the middle
+
+Across nine tabular benchmarks, TailMender sits at the bottom of the rare-error axis while remaining unremarkable rather than best on the bulk axis. The trade-off is asymmetric: large rare-region gains for a moderate bulk cost concentrated on a few datasets.
+
+<p align="center">
+  <img src="docs/figures/fig_results.png" alt="Rare-versus-bulk trade-off: TailMender lowest on rare error with mid-pack bulk ratios" width="96%">
+</p>
+
+## Quick start
+
+Python 3.10+ recommended.
 
 ```bash
 pip install -r requirements.txt
+python scripts/run_radical_smoke.py --profile smoke --datasets abalone --seeds 42 --n-estimators 12 --max-train 300 --max-test 120 --output-dir results/smoke
 ```
 
-## Quick start (smoke test)
-
-From the repository root, run a small sanity check on one benchmark:
+PowerShell:
 
 ```powershell
 python scripts\run_radical_smoke.py --profile smoke --datasets abalone --seeds 42 --n-estimators 12 --max-train 300 --max-test 120 --output-dir results\smoke
 ```
 
-On Linux or macOS, use forward slashes:
+## Reproduce the tables
 
-```bash
-python scripts/run_radical_smoke.py --profile smoke --datasets abalone --seeds 42 --n-estimators 12 --max-train 300 --max-test 120 --output-dir results/smoke
-```
-
-The script writes metrics to the output directory (CSV and JSON summaries). Those files are local artifacts and are not part of the source tree.
-
-## Main experiment script
-
-`scripts/run_radical_smoke.py` evaluates TailMender against published imbalanced-regression baselines on nine real-world tabular regression benchmarks.
-
-**All nine datasets (default):**
+Nine-dataset suite with three seeds (CPU-intensive; allow several hours):
 
 ```bash
 python scripts/run_radical_smoke.py --profile full --seeds 42,43,44 --n-estimators 80 --output-dir results/full
 ```
 
-**Subset of datasets:**
+Subset example:
 
 ```bash
 python scripts/run_radical_smoke.py --profile full --datasets abalone,california_housing,insurance --seeds 42 --output-dir results/subset
 ```
 
-**Methods included:** `No-Rebalance`, `StaticTailWeight`, `InverseDensityWeight`, `LDSWeight`, `RandomTailReplay`, `SMOTER-Batch`, `SMOGN-Batch`, `REBAGG-Resample`, and `TailMender`.
+Outputs go under `results/` (gitignored). Datasets download at runtime through OpenML and scikit-learn; no proprietary files are bundled.
 
-Evaluation protocol: chronological 70/30 train/test split, features and targets standardized, rare region defined as the bottom 10% and top 10% of training targets (fixed thresholds), gradient-boosted tree regressors (XGBoost when available).
+```bash
+python scripts/run_radical_smoke.py --help
+```
 
-## Benchmark datasets
-
-The default evaluation uses nine heterogeneous tabular regression datasets drawn from OpenML, scikit-learn, and other public repositories. Data are fetched at runtime via `scripts/run_router_pilot.py`; no proprietary files are bundled in this repository.
-
-| Dataset | Rows (approx.) | Features (approx.) |
-|---------|----------------:|-------------------:|
-| abalone | 4,177 | 8 |
-| cpu_activity | 8,192 | 21 |
-| california_housing | 20,640 | 8 |
-| house_16h | 22,784 | 16 |
-| insurance | 1,338 | 6 |
-| ames_housing | 2,930 | 80 |
-| ibm_employee | 1,470 | 34 |
-| melbourne_housing | 27,247 | 18 |
-| bike_sharing | 17,379 | 12 |
-
-An internet connection is required on first download for datasets that are not cached locally by scikit-learn or OpenML.
-
-## Reproducing results
-
-1. Install dependencies with `pip install -r requirements.txt`.
-2. Run `scripts/run_radical_smoke.py` with `--profile full`, three seeds (`--seeds 42,43,44`), and the default dataset list. Full runs are CPU-intensive; allow several hours on a multi-core machine.
-3. Inspect `radical_full_results.csv` and `radical_full_summary.json` in your chosen `--output-dir`. Rank summaries aggregate per-dataset rare-region and overall metrics across methods.
-
-Hyperparameters (ensemble grid, calibration objective, small-sample fallback) are defined in `scripts/run_radical_smoke.py`.
-
-## Repository layout
+## Layout
 
 ```
-scripts/
-  run_radical_smoke.py   # TailMender + baselines on the nine-dataset suite
-  run_router_pilot.py    # dataset loaders and shared utilities
-src/
-  evaluation/metrics.py  # rare-region metrics
+scripts/           smoke / full evaluation driver and dataset loaders
+src/evaluation/    rare-region metrics
+docs/figures/      motivation, framework, and results plates for this README
 requirements.txt
 ```
+
+## Notes
+
+- Rare region: bottom and top 10% of training targets (fixed thresholds).
+- Baselines in the driver include no-rebalance, static / inverse-density / LDS weights, random tail replay, SMOTER, SMOGN, and REBAGG, plus TailMender.
+- Hyperparameters for the student grid and calibration objective live in `scripts/run_radical_smoke.py`.
+- The calibration split never enters a fit that it scores; the deployed predictor uses every training row after selection.

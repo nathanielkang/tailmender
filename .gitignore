@@ -5,7 +5,7 @@ logs/
 logs/**
 *.log
 
-# Generated metrics and artifacts (anywhere in tree)
+# Generated metrics (local runs only)
 *.csv
 *.json
 
@@ -26,13 +26,16 @@ build/
 .ipynb_checkpoints/
 **/.ipynb_checkpoints/
 
-# Figure and document outputs
+# Generated docs / plots outside the README figure set
 *.pdf
-*.png
 *.jpg
 *.jpeg
 *.svg
 *.eps
+*.png
+!docs/
+!docs/figures/
+!docs/figures/*.png
 
 # OS and editor files
 .DS_Store
